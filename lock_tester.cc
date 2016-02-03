@@ -81,15 +81,15 @@ test2(void *x)
 {
   int i = * (int *) x;
 
-  printf ("test2: client %d acquire a release a\n", i);
+  printf ("test2: client %d acquire a release %d\n", i, a);
   lc[i]->acquire(a);
-  printf ("test2: client %d acquire done\n", i);
+  printf ("test2: client %d acquire %d done\n", i, a);
   check_grant(a);
   sleep(1);
-  printf ("test2: client %d release\n", i);
+  printf ("test2: client %d release %d\n", i, a);
   check_release(a);
   lc[i]->release(a);
-  printf ("test2: client %d release done\n", i);
+  printf ("test2: client %d release %d done\n", i, a);
   return 0;
 }
 
@@ -190,14 +190,15 @@ main(int argc, char *argv[])
 
     if(!test || test == 2){
       // test2
+      printf("test 2\n");
       for (int i = 0; i < nt; i++) {
-	int *a = new int (i);
-	r = pthread_create(&th[i], NULL, test2, (void *) a);
-	VERIFY (r == 0);
-      }
-      for (int i = 0; i < nt; i++) {
-	pthread_join(th[i], NULL);
-      }
+    	int *a = new int (i);
+    	r = pthread_create(&th[i], NULL, test2, (void *) a);
+    	VERIFY (r == 0);
+          }
+          for (int i = 0; i < nt; i++) {
+    	pthread_join(th[i], NULL);
+          }
     }
 
     if(!test || test == 3){
