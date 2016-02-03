@@ -37,9 +37,10 @@ lock_server::acquire(int clt, lock_protocol::lockid_t lid, int &r)
     }
   }
   locks[lid] = LOCKED;
-  printf("lock %d is granted to %d\n", lid, clt);
+  printf("lock %d is granted to %d\n", (int) lid, clt);
   pthread_mutex_unlock(&mutexmap);
-  lock_protocol::status ret = lock_protocol::OK;
+  lock_protocol::status ret = 1234;
+  r=1234;
   return ret;
 }
 
@@ -52,12 +53,13 @@ lock_server::release(int clt, lock_protocol::lockid_t lid, int &r)
   if((it = locks.find(lid)) != locks.end() && it->second == LOCKED) {
   	locks[lid] = FREE;
     pthread_cond_broadcast(&stateVar);
-  	printf("clt %d release lock %d\n", clt, lid);
-    ret = lock_protocol::OK;
+  	printf("clt %d release lock\n", clt);
+    ret = 1234;
   } else {
-  	printf("clt %d does not hold %d\n", clt, lid);
-    ret = lock_protocol::NOENT;
+  	printf("clt %d does not hold %d\n", clt, (int) lid);
+    ret = 5678;
   }
+  r=666;
   pthread_mutex_unlock(&mutexmap);
   return ret;
 }
