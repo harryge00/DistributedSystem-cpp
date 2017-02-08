@@ -11,6 +11,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "lang/verify.h"
 
 // must be >= 2
