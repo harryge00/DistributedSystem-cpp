@@ -12,12 +12,16 @@
 class lock_server {
 
  protected:
-  int nacquire;
-
+	int nacquire;
+ 	std::map<lock_protocol::lockid_t, bool> locks;
+	std::map<lock_protocol::lockid_t, int> whose;
+	static pthread_mutex_t mutex;
  public:
   lock_server();
   ~lock_server() {};
   lock_protocol::status stat(int clt, lock_protocol::lockid_t lid, int &);
+  lock_protocol::status acquire(int clt, lock_protocol::lockid_t lid, int &);
+  lock_protocol::status release(int clt, lock_protocol::lockid_t lid, int &);
 };
 
 #endif 
