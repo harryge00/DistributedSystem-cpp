@@ -14,8 +14,9 @@ class lock_server {
  protected:
 	int nacquire;
  	std::map<lock_protocol::lockid_t, bool> locks;
-	std::map<lock_protocol::lockid_t, int> whose;
-	static pthread_mutex_t mutex;
+	std::map<lock_protocol::lockid_t, int> holders;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
  public:
   lock_server();
   ~lock_server() {};
