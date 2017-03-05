@@ -644,7 +644,6 @@ rpcs::dispatch(djob_t *j)
 }
 
 // rpcs::dispatch calls this when an RPC request arrives.
-//
 // checks to see if an RPC with xid from clt_nonce has already been received.
 // if not, remembers the request in reply_window_.
 //
@@ -662,8 +661,37 @@ rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
 		unsigned int xid_rep, char **b, int *sz)
 {
 	ScopedLock rwl(&reply_window_m_);
-
-        // You fill this in for Lab 1.
+	std::list<reply_t>::iterator iter;
+	
+	for (iter = reply_window_[clt_nonce].begin(); iter != reply_window_[clt_nonce].end(); ) {
+		if (iter->xid < xid_rep && iter->cb_present) {
+			free(iter->buf);
+			iter = reply_window_[clt_nonce].erase(iter);
+			continue;
+		}	
+		if (xid == iter->xid) {
+			if(iter->cb_present) {
+				*b = iter->buf;
+				*sz = iter->sz;
+				return DONE;
+			} else {
+				return INPROGRESS;
+			}
+		} 	
+		if(reply_window_[clt_nonce].front().xid > xid) 
+			return FORGOTTEN;
+		iter++;
+	}
+		
+	reply_t reply(xid);
+	for (iter = reply_window_[clt_nonce].begin(); iter != reply_window_[clt_nonce].end(); iter++) {
+		if(iter->xid > xid) {
+			reply_window_[clt_nonce].insert(iter, reply);
+			break;
+		}		
+	}
+	if(iter == reply_window_[clt_nonce].end())
+		reply_window_[clt_nonce].push_back(reply);
 	return NEW;
 }
 
@@ -678,6 +706,19 @@ rpcs::add_reply(unsigned int clt_nonce, unsigned int xid,
 {
 	ScopedLock rwl(&reply_window_m_);
         // You fill this in for Lab 1.
+	std::map<unsigned int, std::list<reply_t> >::iterator clt;
+	std::list<reply_t>::iterator iter;
+	clt = reply_window_.find(clt_nonce);
+	if (clt != reply_window_.end()) {
+		for (iter = clt->second.begin(); iter != clt->second.end(); iter++) { 
+			if (iter->xid == xid) {
+				iter->buf = b;
+				iter->sz = sz;
+				iter->cb_present = true;
+				break; 
+			}
+		}
+	}
 }
 
 void
@@ -687,7 +728,7 @@ rpcs::free_reply_window(void)
 	std::list<reply_t>::iterator it;
 
 	ScopedLock rwl(&reply_window_m_);
-	for (clt = reply_window_.begin(); clt != reply_window_.end(); clt++){
+	for (clt = reply_window_.begin(); clt != reply_window_.end(); clt++) {
 		for (it = clt->second.begin(); it != clt->second.end(); it++){
 			free((*it).buf);
 		}
